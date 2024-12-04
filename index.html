@@ -31,7 +31,8 @@
             overflow: hidden;
         }
 
-        th, td {
+        th,
+        td {
             padding: 15px;
             text-align: left;
             border-bottom: 1px solid #ddd;
@@ -61,14 +62,27 @@
             font-weight: bold;
         }
 
+        .status-finishing {
+            color: #ffc107;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
         @media (max-width: 600px) {
             table {
                 font-size: 14px;
             }
 
-            th, td {
+            th,
+            td {
                 padding: 10px;
             }
+        }
+
+        /* Add some min-width to ensure columns don't get too narrow */
+        th:nth-child(3),
+        td:nth-child(3) {
+            min-width: 150px;
         }
     </style>
 </head>
@@ -81,6 +95,7 @@
             <tr>
                 <th>Identifier</th>
                 <th>Status</th>
+                <th>Charging Duration</th>
             </tr>
         </thead>
         <tbody id="evseTableBody">
@@ -96,9 +111,30 @@
             const countdownElement = document.getElementById('countdown');
             timeLeft -= 1;
             countdownElement.textContent = timeLeft;
-            
+
             if (timeLeft <= 0) {
-                timeLeft = 60; // Reset countdown
+                timeLeft = 60;
+            }
+        }
+
+        function capitalizeFirstLetter(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+        }
+
+        function calculateDuration(startedAt) {
+            if (!startedAt) return '';
+
+            const start = new Date(startedAt);
+            const now = new Date();
+            const diffMs = now - start;
+
+            const hours = Math.floor(diffMs / (1000 * 60 * 60));
+            const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+            if (hours > 0) {
+                return `${hours}h ${minutes}m`;
+            } else {
+                return `${minutes}m`;
             }
         }
 
@@ -106,27 +142,39 @@
             try {
                 const response = await fetch('/status');
                 const data = await response.json();
-                
+
                 const tableBody = document.getElementById('evseTableBody');
                 tableBody.innerHTML = '';
-                
+
                 data.locations.forEach(location => {
                     location.zones.forEach(zone => {
                         zone.evses.forEach(evse => {
                             const row = document.createElement('tr');
                             const status = evse.status.toLowerCase();
-                            const isUnavailable = status === 'charging' || status === 'suspendedev';
-                            const statusClass = isUnavailable ? 'status-charging' : 'status-available';
+                            let statusClass;
+
+                            if (status === 'charging' || status === 'suspendedev') {
+                                statusClass = 'status-charging';
+                            } else if (status === 'finishing') {
+                                statusClass = 'status-finishing';
+                            } else {
+                                statusClass = 'status-available';
+                            }
+
+                            const duration = (status === 'charging' || status === 'finishing' || status === 'suspendedev')
+                                ? calculateDuration(evse.startedAt)
+                                : '';
+
                             row.innerHTML = `
-                                <td>${evse.identifier}</td>
-                                <td class="${statusClass}">${evse.status}</td>
+                                <td>${evse.identifier} (${evse.currentType})</td>
+                                <td class="${statusClass}">${capitalizeFirstLetter(evse.status)}</td>
+                                <td>${duration}</td>
                             `;
                             tableBody.appendChild(row);
                         });
                     });
                 });
 
-                // Reset countdown after successful fetch
                 timeLeft = 60;
             } catch (error) {
                 console.error('Error fetching EVSE status:', error);
