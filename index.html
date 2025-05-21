@@ -165,9 +165,12 @@
                                 ? calculateDuration(evse.startedAt)
                                 : '';
 
+                            // Check for ocPercent and append it to the status
+                            const socPercent = evse.socPercent !== null ? ` (${evse.socPercent}%)` : '';
+
                             row.innerHTML = `
-                                <td>${evse.identifier} (${evse.currentType})</td>
-                                <td class="${statusClass}">${capitalizeFirstLetter(evse.status)}</td>
+                                <td>${evse.identifier} (${evse.currentType})<br>${location.name}</td>
+                                <td class="${statusClass}">${capitalizeFirstLetter(evse.status)}${socPercent}</td>
                                 <td>${duration}</td>
                             `;
                             tableBody.appendChild(row);

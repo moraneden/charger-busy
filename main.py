@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from charger import ChargerChecker
 import uvicorn
+from itertools import chain
 
 app = FastAPI()
 charger_checker = ChargerChecker()
@@ -15,7 +16,17 @@ def read_root():
 
 @app.get("/status")
 def read_status():
-    return charger_checker.check()
+    res = []
+    res.append(charger_checker.check(322))
+    res.append(charger_checker.check(768))
+ 
+    merged = {
+        "locations": list(chain.from_iterable(obj.get("locations", []) for obj in res)),
+        "tariffs": [],
+        "currencies": []
+    }
+    print(merged) 
+    return merged
 
 
 if __name__ == "__main__":
