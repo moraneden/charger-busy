@@ -5,7 +5,17 @@ class ChargerChecker:
         pass
 
     def check(self, location=322):
-        url = "https://cp.evedge.co.il/api/v2/app/locations"
+        try:
+            self.get_status("", location)
+        except Exception as e:
+            print(str(e))
+            return {"error": str(e)}
+    
+    def get_status(self, url, location):
+        if not url:
+            return {"error": "URL is required"}
+        if not location:
+            return {"error": "Location is required"}
         try:
             payload = {"locations":{location:None}}
             response = requests.post(url, json=payload)

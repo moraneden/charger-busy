@@ -17,8 +17,9 @@ def read_root():
 @app.get("/status")
 def read_status():
     res = []
-    res.append(charger_checker.check(322))
-    res.append(charger_checker.check(768))
+    res.append(charger_checker.get_status("https://cp.evedge.co.il/api/v2/app/locations", 322))
+    res.append(charger_checker.get_status("https://cp.evedge.co.il/api/v2/app/locations", 768))
+    res.append(charger_checker.get_status("https://cp.scala-ev.com/api/v2/app/locations", 259))
  
     merged = {
         "locations": list(chain.from_iterable(obj.get("locations", []) for obj in res)),

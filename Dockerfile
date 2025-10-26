@@ -3,7 +3,7 @@ FROM python:3.12-slim
 
 
 RUN apt-get update && \
-    apt-get install --no-install-suggests --no-install-recommends --yes pip
+    apt-get install --no-install-suggests --no-install-recommends --yes pip curl
 # install packages
 RUN pip install poetry uvicorn
 
